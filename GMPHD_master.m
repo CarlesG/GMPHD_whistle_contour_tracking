@@ -69,8 +69,8 @@ tl=10; %specify minimal track length in time steps - this is how long a
 
 
 % ~~~~~~~~~~~~~~~~~~~~~~ Read audio data ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-[x,fs]=audioread('TestFile.wav');
+[file, path] = uigetfile('*.wav','Select File to open');
+[x,fs] = audioread(fullfile(path, file));
 x=x(:,1); %select first channel
 %Note: the following only handles one channel data. Adjust as necessary. 
   
@@ -103,5 +103,5 @@ for m=1:size(Zset,2)
     end
 end
 for m=1:size(DT,2)
-plot(DT(m).time,DT(m).freq,'LineWidth',1.5),hold on
+	plot(DT(m).time,DT(m).freq,'LineWidth',1.5),hold on
 end
