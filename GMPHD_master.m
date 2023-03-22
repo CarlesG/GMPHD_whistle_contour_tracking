@@ -16,7 +16,8 @@
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clear, close all
-
+addpath('pyknogram_functions'); % All pyknogram functions
+    
 %% ////////////// Specify PARAMETERS //////////////
 %NOTE: The filter was developed based on using window length (win_width_s) 
 % of 10.7 ms (which resulted in 93.75 Hz frequency bin resolution). 
