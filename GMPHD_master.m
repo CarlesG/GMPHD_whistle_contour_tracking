@@ -105,3 +105,9 @@ end
 for m=1:size(DT,2)
 	plot(DT(m).time,DT(m).freq,'LineWidth',1.5),hold on
 end
+xlabel('time(s)','Interpreter','latex')
+ylabel('frequency(Hz)','Interpreter','latex')
+axis tight
+grid on
+
+

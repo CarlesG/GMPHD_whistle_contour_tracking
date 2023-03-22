@@ -1,8 +1,9 @@
 function [Xk_m,XTag]=gmphd_freqonly_adaptive(Zset,parameters,models)
+
 %gmphd_freqonly_adaptive is a function that performs Gaussian Mixture 
 %Probability Hypothesis Density filtering on a set of noisy measurements  
 %for the purpose of frequency contour extraction. Measurements consist of
-%frequency information only. States consist of frequency and rate of cahnge
+%frequency information only. States consist of frequency and rate of change
 %of frequency information.
 
 %Inputs:
@@ -306,7 +307,5 @@ end
 end
 
 function y = mynormpdf(x,mu,sigma)
-
     y = exp(-0.5 * ((x - mu)./sigma).^2) ./ (sqrt(2*pi) .* sigma);
-
 end
