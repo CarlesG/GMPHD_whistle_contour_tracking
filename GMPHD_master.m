@@ -55,59 +55,72 @@ parameters.Tr = 0.001; %truncation threshold used in Pruning & merging
 load('birthpdf.mat');
 models.birthpdf=birthpdf;
 
-
-tl=10; %specify minimal track length in time steps - this is how long a 
+t_min = 0.053; %default value.
+% t_min = 0.07; % current value: min track length in seconds. 
+tl = t_min / dt;
+% tl=10; %specify minimal track length in time steps - this is how long a 
 %detection needs to be in order to become a true detection- tl=10 gives you
 %tl*dt = 0.053 s (dt=time increment of your spectrogram). Using shorter tl
 %will give you more false alarms, but potentially better recall (more
 %detected sounds), and using higer tl will give you high precision (less
 %false alrams) but consequently worse recall (less sounds that you expected
 %to retrieve).
-
-
 %% /////////////// RUN GMPHD DETECTOR ///////////////////
-
-
 % ~~~~~~~~~~~~~~~~~~~~~~ Read audio data ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [file, path] = uigetfile('*.wav','Select File to open');
 [x,fs] = audioread(fullfile(path, file));
 x=x(:,1); %select first channel
 %Note: the following only handles one channel data. Adjust as necessary. 
-  
-       
-%% ~~~~~~~~~~~~~ Make MEASUREMENTS (Zsets) ~~~~~~~~~~~~~~~~~~~
-[Zset] = preprocess_getZset(win_width_s,dt,fs,x,freqrange,peak_thr);
-%Zset is a cell array where each cell contains spectral peaks (frequencies)
-% from a particular time step that were above threshold (peak_thr - in dB).
-
-
-%% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
-
-[Xk_m,XTag]=gmphd_freqonly_adaptive(Zset,parameters,models);
-
-%% ~~~~~~~~~~~~~~~~ Extract Tracks (whistle contours) ~~~~~~~~~~~~~~~~~~
-
-[DT,~,~] = tracktarget(XTag,Xk_m,dt,tl);
-%DT is a structure of detected signals with 3 fields for each (freq x time x label)
-
-%save([folder,'GMPHD_',file(1:end-4),'.mat'],'DT')
-
-%% ~~~~~~~~~~~~~~~~~~ PLOT Detections ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-%Plot detections against measurements
-figure
-t=(0:(size(Zset,2)-1)).*dt;
-for m=1:size(Zset,2)
-    if ~isempty(Zset{m})
-        plot(t(m),Zset{m},'k.'),hold on
+secs_analisys = 6; % 4 seconds of analysis.
+N_max = length(x);
+N_analysis = round(secs_analisys * fs);
+E = [];
+% Create detected events structure
+idx = 1:N_analysis:N_max;
+for i = 1:length(idx)
+%                i
+%                 idx(i)
+%                 idx(i) + N_analysis - 1
+    if i==length(idx)
+        y_part = x(idx(i):end); % Last chunk
+    else
+        y_part = x(idx(i) : idx(i) + N_analysis - 1); % Any chunk of N_analysis points
     end
-end
-for m=1:size(DT,2)
-	plot(DT(m).time,DT(m).freq,'LineWidth',1.5),hold on
-end
-xlabel('time(s)','Interpreter','latex')
-ylabel('frequency(Hz)','Interpreter','latex')
-axis tight
-grid on
-
+%% ~~~~~~~~~~~~~ Make MEASUREMENTS (Zsets) ~~~~~~~~~~~~~~~~~~~
+    [Zset] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
+    %Zset is a cell array where each cell contains spectral peaks (frequencies)
+    % from a particular time step that were above threshold (peak_thr - in dB).
+    
+    
+    %% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
+    
+    [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset,parameters,models);
+    
+    %% ~~~~~~~~~~~~~~~~ Extract Tracks (whistle contours) ~~~~~~~~~~~~~~~~~~
+    
+    [DT,~,~] = tracktarget(XTag,Xk_m,dt,tl);
+    %DT is a structure of detected signals with 3 fields for each (freq x time x label)
+    
+    %save([folder,'GMPHD_',file(1:end-4),'.mat'],'DT')
+    E = [E DT];
+    %% ~~~~~~~~~~~~~~~~~~ PLOT Detections ~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    %Plot detections against measurements
+    figure(1),clf
+    t=(0:(size(Zset,2)-1)).*dt;
+    for m=1:size(Zset,2)
+        if ~isempty(Zset{m})
+            plot(t(m),Zset{m},'k.'),hold on
+        end
+    end
+    for m=1:size(DT,2)
+	    plot(DT(m).time,DT(m).freq,'LineWidth',1.5),hold on
+    end
+    title('Candidates vs detections','Interpreter','latex')
+    xlabel('time(s)','Interpreter','latex')
+    ylabel('frequency(Hz)','Interpreter','latex')
+    axis tight
+    grid on
+%     drawnow,pause()
+end % break point here
 

@@ -42,15 +42,20 @@ end
 
 %find targets of certain length:
 count=1;
+ind=[];
 for l=1:size(Target,2)
     if numel(Target(l).time)>tl
-ind(count)=l;
-count=count+1;
+        ind(count)=l;
+        count=count+1;
     else
         continue
     end
 end
-
-DT=Target(ind);
+if isempty(ind)
+    DT = [];
+    %disp('Ningún silbido detectado')
+else
+    DT=Target(ind);
+end
 end
 
