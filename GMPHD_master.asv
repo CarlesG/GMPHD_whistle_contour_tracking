@@ -164,12 +164,10 @@ for i = 1:length(idx)
     t=(0:(size(Zset_all,2))).*dt;  
     
     for i = 1:length(Zset)
-        [~,ix] = min(abs(t - tiempo_unico(i)));
-        Zset_all{ix} = Zset{i};
+        [~,idx] = min(abs(t - tiempo_unico(i)));
+        Zset_all{idx} = Zset{i};
     end
-    Zset = Zset_all;
-    % count the number of elements different of empty in the cell array
-%     count = length(Zset_all) - nnz(cellfun(@isempty,Zset_all))
+%     lengtyhnnz(cellfun(@isempty,Zset_all))
     %% Spectrogram implementation
 
 %     [Zset] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
@@ -178,8 +176,6 @@ for i = 1:length(idx)
     
         
     %% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
-    
-%      [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset_all,parameters,models);
     
      [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset,parameters,models);
     
@@ -202,15 +198,13 @@ for i = 1:length(idx)
         end
     end
     for m=1:size(DT,2)
-	    plot((DT(m).time) - 0.01, DT(m).freq,'LineWidth',1.5),hold on
+	    plot((DT(m).time - 0.01), DT(m).freq,'LineWidth',1.5),hold on
     end
     title('Candidates vs detections','Interpreter','latex')
-    xlabel('time (s)','Interpreter','latex')
-    ylabel('frequency (kHz)','Interpreter','latex')
-    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    axis([0 Tl flow fhigh]);
-    set(gcf,'color','w');box on;grid;
+    xlabel('time(s)','Interpreter','latex')
+    ylabel('frequency(Hz)','Interpreter','latex')
+    axis([0 Tl flow fhigh]);axis tight
+    grid on
 %     drawnow,pause()
 end % break point here
 
