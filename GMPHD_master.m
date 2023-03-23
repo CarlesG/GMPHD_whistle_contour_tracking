@@ -13,11 +13,10 @@
 % hypothesis density filters. Journal of the Acoustical Society of America,
 % 140(3),1981-1991.
 %-------------------------------------------------------------------------
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 clear, close all
 addpath('pyknogram_functions'); % All pyknogram functions
-    
+
 %% ////////////// Specify PARAMETERS //////////////
 %NOTE: The filter was developed based on using window length (win_width_s) 
 % of 10.7 ms (which resulted in 93.75 Hz frequency bin resolution). 
@@ -28,8 +27,8 @@ addpath('pyknogram_functions'); % All pyknogram functions
 % have to be retrained.
 
 % ------------ Parameters for obtaining the measurements ------------------
-win_width_s = 0.0107; %window length in seconds (default)
-freqrange = [2000,50000]; % lower and higher frequency range limits in
+win_width_s = 0.0053; %window length in seconds (default)
+freqrange = [5000,50000]; % lower and higher frequency range limits in
 % Hz in which your signals occur 
 peak_thr =8; %threshold in dB for finding spectral peaks 
 %(these become your measurements that will go to the detector)
@@ -39,6 +38,7 @@ peak_thr =8; %threshold in dB for finding spectral peaks
 % System model: xk =F*xk_1 + v; 
 % Measurement model: zk = H*xk + w;
 dt=0.00535; %time increment in s (default)
+% dt=0.0100; %time increment in s (default)
 models.F = [1, dt; 0, 1]; %state transition matrix
 models.Q =[5013,166770;166770, 53973000]; %system noise covariance matrix
 models.H = [1, 0]; % measurement matrix
@@ -72,12 +72,22 @@ tl = t_min / dt;
 [x,fs] = audioread(fullfile(path, file));
 x=x(:,1); %select first channel
 %Note: the following only handles one channel data. Adjust as necessary. 
-secs_analisys = 6; % 4 seconds of analysis.
+secs_analisys = 1; % 4 seconds of analysis.
 N_max = length(x);
 N_analysis = round(secs_analisys * fs);
 E = [];
 % Create detected events structure
 idx = 1:N_analysis:N_max;
+
+
+% Settings for the definition of the filter Bank of piknogram
+BW=1000; % BW in Hz
+BWoverlap=50; % BW in %
+flow=5000;fhigh=min([50000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
+Tl = 1;
+%flow=2000;fhigh=min([25000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
+
+
 for i = 1:length(idx)
 %                i
 %                 idx(i)
@@ -87,12 +97,73 @@ for i = 1:length(idx)
     else
         y_part = x(idx(i) : idx(i) + N_analysis - 1); % Any chunk of N_analysis points
     end
-%% ~~~~~~~~~~~~~ Make MEASUREMENTS (Zsets) ~~~~~~~~~~~~~~~~~~~
+    %% ~~~~~~~~~~~~~ Make MEASUREMENTS (Zsets) ~~~~~~~~~~~~~~~~~~~
+    
+
+    %% Piknogram implementation
+    
+%     [FW,BW_est, ndraw] = pyknogram_freqdomain(y_part, fs, flow, fhigh, BW, BWoverlap, 10e-3);
+%     X=repmat(ndraw,1,size(FW,2)); 
+%     %  Get points with a Bandwidth lower than a given value (BW_thre)
+%     BW_thre=BW/4;
+%     BW_est(1,:)=BW; % To get rid of some problems in the BW estimation of the first and last
+%     BW_est(end,:)=BW; % To get rid of some problems in the BW estimation of the first and last
+%     idx_BW=find(BW_est<BW_thre);
+%     
+%     % ----------
+%     %  Point density based filter
+%     [P,idx_new]  = kernel_density( FW, ndraw, BW, BWoverlap );
+%     idx_combined = intersect(idx_BW,idx_new');   
+%     
+%     % Create a struct and store possible whistles
+%     Pyk=struct('time',cell(1,length(idx_combined)),'freq',[],'ampl',[],'label',[],'done',[]);
+%     kk=num2cell(X(idx_combined));[Pyk.time]=kk{:};
+%     kk=num2cell(FW(idx_combined));[Pyk.freq]=kk{:};
+%     
+%     % Represent candidates
+%     figure(2);clf;
+%     %sh=scatter([Pyk.time],[Pyk.freq],[],[Pyk.ampl],'filled');
+%     sh=scatter([Pyk.time],[Pyk.freq],[],'b','filled');
+%     sh.SizeData=15; 
+%     title(['PRWE method']);
+%     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
+%     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     axis([0 Tl flow fhigh]);
+%     set(gcf,'color','w');box on;grid;
+% 
+%     % Ordering candidates;
+%     tiempo = [Pyk.time];
+%     frecuencia = [Pyk.freq];
+%     [tiempo_ordenado, ind_ordenado] = sort(tiempo);
+%     frecuencia_ordenado = frecuencia(ind_ordenado);
+%     [tiempo_unico,ia,ic] = unique(tiempo_ordenado);
+%     Zset = cell([1 length(tiempo_unico)]);
+%     ic_unico = unique(ic);
+% 
+%     for ii = 1:length(Zset)
+%         Zset{ii} = sort(frecuencia_ordenado(ic == ic_unico(ii)));
+%     end
+%     
+%     % Represent ordered candidates
+%     figure(3),clf
+%     for i = 1:length(tiempo_unico)
+%         plot(tiempo_unico(i),Zset{i},'b.'),hold on
+%     end
+%     title('Ordered candidates')
+%     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
+%     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     axis([0 Tl flow fhigh]);
+%     set(gcf,'color','w');box on;grid;
+%     
+    %% Spectrogram implementation
+
     [Zset] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
     %Zset is a cell array where each cell contains spectral peaks (frequencies)
     % from a particular time step that were above threshold (peak_thr - in dB).
     
-    
+        
     %% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
     
     [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset,parameters,models);
@@ -111,16 +182,17 @@ for i = 1:length(idx)
     t=(0:(size(Zset,2)-1)).*dt;
     for m=1:size(Zset,2)
         if ~isempty(Zset{m})
-            plot(t(m),Zset{m},'k.'),hold on
+%             plot(tiempo_unico(m),Zset{m},'k.'),hold on
+            plot(t(m),Zset{m},'k.'),hold on % Uncomment to plot spectrogram candidates
         end
     end
     for m=1:size(DT,2)
-	    plot(DT(m).time,DT(m).freq,'LineWidth',1.5),hold on
+	    plot(DT(m).time, DT(m).freq,'LineWidth',1.5),hold on
     end
     title('Candidates vs detections','Interpreter','latex')
     xlabel('time(s)','Interpreter','latex')
     ylabel('frequency(Hz)','Interpreter','latex')
-    axis tight
+    axis([0 Tl flow fhigh]);axis tight
     grid on
 %     drawnow,pause()
 end % break point here
