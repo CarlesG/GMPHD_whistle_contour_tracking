@@ -149,8 +149,8 @@ for i = 1:length(idx)
     
     % Represent ordered candidates
     figure(3),clf
-    for i = 1:length(tiempo_unico)
-        plot(tiempo_unico(i),Zset{i},'b.'),hold on
+    for j = 1:length(tiempo_unico)
+        plot(tiempo_unico(j),Zset{j},'b.'),hold on
     end
     title('Ordered candidates')
     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
@@ -163,11 +163,13 @@ for i = 1:length(idx)
     Zset_all = cell(1, numstps);
     t=(0:(size(Zset_all,2))).*dt;  
     
-    for i = 1:length(Zset)
-        [~,idx] = min(abs(t - tiempo_unico(i)));
-        Zset_all{idx} = Zset{i};
+    for z = 1:length(Zset)
+        [~,ix] = min(abs(t - tiempo_unico(z)));
+        Zset_all{ix} = Zset{z};
     end
-%     lengtyhnnz(cellfun(@isempty,Zset_all))
+    Zset = Zset_all;
+    % count the number of elements different of empty in the cell array
+%     count = length(Zset_all) - nnz(cellfun(@isempty,Zset_all))
     %% Spectrogram implementation
 
 %     [Zset] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
@@ -177,6 +179,8 @@ for i = 1:length(idx)
         
     %% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
     
+%      [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset_all,parameters,models);
+    
      [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset,parameters,models);
     
     %% ~~~~~~~~~~~~~~~~ Extract Tracks (whistle contours) ~~~~~~~~~~~~~~~~~~
@@ -185,12 +189,12 @@ for i = 1:length(idx)
     %DT is a structure of detected signals with 3 fields for each (freq x time x label)
     
     %save([folder,'GMPHD_',file(1:end-4),'.mat'],'DT')
-    E = [E DT];
+    
     %% ~~~~~~~~~~~~~~~~~~ PLOT Detections ~~~~~~~~~~~~~~~~~~~~~~~~~
     
     %Plot detections against measurements
     figure(1),clf
-    t=(0:(size(Zset,2))).*dt;
+    t=(0+ix(i):(size(Zset,2))).*dt;
     for m=1:size(Zset,2)
         if ~isempty(Zset{m})
 %             plot(tiempo_unico(m),Zset{m},'k.'),hold on
@@ -198,13 +202,20 @@ for i = 1:length(idx)
         end
     end
     for m=1:size(DT,2)
-	    plot((DT(m).time - 0.01), DT(m).freq,'LineWidth',1.5),hold on
+	    plot((DT(m).time) - 0.01, DT(m).freq,'LineWidth',1.5),hold on
     end
     title('Candidates vs detections','Interpreter','latex')
-    xlabel('time(s)','Interpreter','latex')
-    ylabel('frequency(Hz)','Interpreter','latex')
-    axis([0 Tl flow fhigh]);axis tight
-    grid on
+    xlabel('time (s)','Interpreter','latex')
+    ylabel('frequency (kHz)','Interpreter','latex')
+    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+    axis([0 Tl flow fhigh]);
+    set(gcf,'color','w');box on;grid;
 %     drawnow,pause()
-end % break point here
+    DT_aux = [];
+    for j = 1:length(DT)
+        DT_aux(j).time = DT(j).time + (idx(i)./ fs); % adding the initial sample for correct timestamp.
+    end
+    E = [E DT_aux];
+end
 

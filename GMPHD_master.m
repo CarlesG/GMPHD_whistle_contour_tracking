@@ -123,16 +123,16 @@ for i = 1:length(idx)
     kk=num2cell(FW(idx_combined));[Pyk.freq]=kk{:};
     
     % Represent candidates
-    figure(2);clf;
-    %sh=scatter([Pyk.time],[Pyk.freq],[],[Pyk.ampl],'filled');
-    sh=scatter([Pyk.time],[Pyk.freq],[],'b','filled');
-    sh.SizeData=15; 
-    title(['PRWE method']);
-    ylabel('Frequency [kHz]');xlabel('Time [sec.]');
-    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    axis([0 Tl flow fhigh]);
-    set(gcf,'color','w');box on;grid;
+%     figure(2);clf;
+%     %sh=scatter([Pyk.time],[Pyk.freq],[],[Pyk.ampl],'filled');
+%     sh=scatter([Pyk.time],[Pyk.freq],[],'b','filled');
+%     sh.SizeData=15; 
+%     title(['PRWE method']);
+%     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
+%     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     axis([0 Tl flow fhigh]);
+%     set(gcf,'color','w');box on;grid;
 
     % Ordering candidates;
     tiempo = [Pyk.time];
@@ -148,9 +148,9 @@ for i = 1:length(idx)
     end
     
     % Represent ordered candidates
-    figure(3),clf
-    for i = 1:length(tiempo_unico)
-        plot(tiempo_unico(i),Zset{i},'b.'),hold on
+    figure(2),clf
+    for j = 1:length(tiempo_unico)
+        plot(tiempo_unico(j),Zset{j},'b.'),hold on
     end
     title('Ordered candidates')
     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
@@ -163,9 +163,9 @@ for i = 1:length(idx)
     Zset_all = cell(1, numstps);
     t=(0:(size(Zset_all,2))).*dt;  
     
-    for i = 1:length(Zset)
-        [~,ix] = min(abs(t - tiempo_unico(i)));
-        Zset_all{ix} = Zset{i};
+    for z = 1:length(Zset)
+        [~,ix] = min(abs(t - tiempo_unico(z)));
+        Zset_all{ix} = Zset{z};
     end
     Zset = Zset_all;
     % count the number of elements different of empty in the cell array
@@ -189,28 +189,32 @@ for i = 1:length(idx)
     %DT is a structure of detected signals with 3 fields for each (freq x time x label)
     
     %save([folder,'GMPHD_',file(1:end-4),'.mat'],'DT')
-    E = [E DT];
+    
     %% ~~~~~~~~~~~~~~~~~~ PLOT Detections ~~~~~~~~~~~~~~~~~~~~~~~~~
     
     %Plot detections against measurements
     figure(1),clf
-    t=(0:(size(Zset,2))).*dt;
+    t=(0:(size(Zset,2))).*dt + (i-1)*Tl;
     for m=1:size(Zset,2)
         if ~isempty(Zset{m})
 %             plot(tiempo_unico(m),Zset{m},'k.'),hold on
             plot(t(m),Zset{m},'k.'),hold on % Uncomment to plot spectrogram candidates
         end
     end
+
     for m=1:size(DT,2)
-	    plot((DT(m).time) - 0.01, DT(m).freq,'LineWidth',1.5),hold on
+	    DT(m).time = DT(m).time - 0.01 + idx(i)./fs;
+        plot(DT(m).time, DT(m).freq,'LineWidth',1.5),hold on
     end
+
     title('Candidates vs detections','Interpreter','latex')
     xlabel('time (s)','Interpreter','latex')
     ylabel('frequency (kHz)','Interpreter','latex')
     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    axis([0 Tl flow fhigh]);
+    axis([min(t) max(t) flow fhigh]);
     set(gcf,'color','w');box on;grid;
-%     drawnow,pause()
-end % break point here
+
+    E = [E DT];
+end
 
