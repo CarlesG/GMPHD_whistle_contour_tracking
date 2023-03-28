@@ -75,7 +75,8 @@ x=x(:,1); %select first channel
 secs_analisys = 1; % 4 seconds of analysis.
 N_max = length(x);
 N_analysis = round(secs_analisys * fs);
-E = [];
+E_sp = [];
+E_pic = [];
 % Create detected events structure
 idx = 1:N_analysis:N_max;
 
@@ -152,7 +153,7 @@ for i = 1:length(idx)
     for j = 1:length(tiempo_unico)
         plot(tiempo_unico(j),Zset{j},'b.'),hold on
     end
-    title('Ordered candidates')
+    title('Candidates Picknogram')
     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
@@ -172,19 +173,31 @@ for i = 1:length(idx)
 %     count = length(Zset_all) - nnz(cellfun(@isempty,Zset_all))
     %% Spectrogram implementation
 
-%     [Zset] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
+    [Zset_sp] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
     %Zset is a cell array where each cell contains spectral peaks (frequencies)
     % from a particular time step that were above threshold (peak_thr - in dB).
-    
+    figure(1),clf
+    t=(0:(size(Zset_sp,2))).*dt;
+    for m=1:size(Zset_sp,2)
+        if ~isempty(Zset_sp{m})
+%             plot(tiempo_unico(m),Zset{m},'k.'),hold on
+            plot(t(m),Zset_sp{m},'k.'),hold on % Uncomment to plot spectrogram candidates
+        end
+    end
+    title('Candidates Spectrogram')
+    ylabel('Frequency [kHz]');xlabel('Time [sec.]');
+    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+    axis([0 Tl flow fhigh]);
+    set(gcf,'color','w');box on;grid;
         
     %% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
     
-%      [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset_all,parameters,models);
-    
+     [Xk_m_sp,XTag_sp] = gmphd_freqonly_adaptive(Zset_sp,parameters,models);
      [Xk_m,XTag] = gmphd_freqonly_adaptive(Zset,parameters,models);
     
     %% ~~~~~~~~~~~~~~~~ Extract Tracks (whistle contours) ~~~~~~~~~~~~~~~~~~
-    
+    [DT_sp,~,~] = tracktarget(XTag_sp,Xk_m_sp,dt,tl);
     [DT,~,~] = tracktarget(XTag,Xk_m,dt,tl);
     %DT is a structure of detected signals with 3 fields for each (freq x time x label)
     
@@ -192,8 +205,8 @@ for i = 1:length(idx)
     
     %% ~~~~~~~~~~~~~~~~~~ PLOT Detections ~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    %Plot detections against measurements
-    figure(1),clf
+    %Plot detections against measurements Picnogram
+    figure(3),clf
     t=(0:(size(Zset,2))).*dt + (i-1)*Tl;
     for m=1:size(Zset,2)
         if ~isempty(Zset{m})
@@ -207,7 +220,7 @@ for i = 1:length(idx)
         plot(DT(m).time, DT(m).freq,'LineWidth',1.5),hold on
     end
 
-    title('Candidates vs detections','Interpreter','latex')
+    title('Candidates vs detections PICKNOGRAM','Interpreter','latex')
     xlabel('time (s)','Interpreter','latex')
     ylabel('frequency (kHz)','Interpreter','latex')
     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
@@ -215,6 +228,30 @@ for i = 1:length(idx)
     axis([min(t) max(t) flow fhigh]);
     set(gcf,'color','w');box on;grid;
 
-    E = [E DT];
+    figure(4),clf
+    t=(0:(size(Zset_sp,2))).*dt + (i-1)*Tl;
+    for m=1:size(Zset,2)
+        if ~isempty(Zset_sp{m})
+%             plot(tiempo_unico(m),Zset{m},'k.'),hold on
+            plot(t(m),Zset_sp{m},'k.'),hold on % Uncomment to plot spectrogram candidates
+        end
+    end
+
+    for m=1:size(DT_sp,2)
+	    DT_sp(m).time = (DT_sp(m).time * fs + idx(i))./fs;
+        plot(DT_sp(m).time, DT_sp(m).freq,'LineWidth',1.5),hold on
+    end
+
+    title('Candidates vs detections SPECTROGRAM','Interpreter','latex')
+    xlabel('time (s)','Interpreter','latex')
+    ylabel('frequency (kHz)','Interpreter','latex')
+    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+    axis([min(t) max(t) flow fhigh]);
+    set(gcf,'color','w');box on;grid;
+    E_pic = [E_pic DT];
+    E_sp = [E_sp DT_sp];
+    DT = [];
+    DT_sp = [];
 end
 
