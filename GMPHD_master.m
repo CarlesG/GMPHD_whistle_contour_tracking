@@ -90,7 +90,7 @@ Tl = 1;
 
 
 
-for i = 1:length(idx)
+for i = 216:length(idx)
 %                i
 %                 idx(i)
 %                 idx(i) + N_analysis - 1
@@ -149,16 +149,16 @@ for i = 1:length(idx)
     end
     
     % Represent ordered candidates
-    figure(2),clf
-    for j = 1:length(tiempo_unico)
-        plot(tiempo_unico(j),Zset{j},'b.'),hold on
-    end
-    title('Candidates Picknogram')
-    ylabel('Frequency [kHz]');xlabel('Time [sec.]');
-    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    axis([0 Tl flow fhigh]);
-    set(gcf,'color','w');box on;grid;
+%     figure(2),clf
+%     for j = 1:length(tiempo_unico)
+%         plot(tiempo_unico(j),Zset{j},'b.'),hold on
+%     end
+%     title('Candidates Picknogram')
+%     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
+%     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     axis([0 Tl flow fhigh]);
+%     set(gcf,'color','w');box on;grid;
 % %     
 % Conformation of all complet Zset candidates
     Zset_all = cell(1, numstps);
@@ -176,20 +176,21 @@ for i = 1:length(idx)
     [Zset_sp] = preprocess_getZset(win_width_s,dt,fs,y_part,freqrange,peak_thr);
     %Zset is a cell array where each cell contains spectral peaks (frequencies)
     % from a particular time step that were above threshold (peak_thr - in dB).
-    figure(1),clf
-    t=(0:(size(Zset_sp,2))).*dt;
-    for m=1:size(Zset_sp,2)
-        if ~isempty(Zset_sp{m})
-%             plot(tiempo_unico(m),Zset{m},'k.'),hold on
-            plot(t(m),Zset_sp{m},'k.'),hold on % Uncomment to plot spectrogram candidates
-        end
-    end
-    title('Candidates Spectrogram')
-    ylabel('Frequency [kHz]');xlabel('Time [sec.]');
-    yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
-    axis([0 Tl flow fhigh]);
-    set(gcf,'color','w');box on;grid;
+% Represent Spectrogram candidates
+%     figure(1),clf
+%     t=(0:(size(Zset_sp,2))).*dt;
+%     for m=1:size(Zset_sp,2)
+%         if ~isempty(Zset_sp{m})
+% %             plot(tiempo_unico(m),Zset{m},'k.'),hold on
+%             plot(t(m),Zset_sp{m},'k.'),hold on % Uncomment to plot spectrogram candidates
+%         end
+%     end
+%     title('Candidates Spectrogram')
+%     ylabel('Frequency [kHz]');xlabel('Time [sec.]');
+%     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     axis([0 Tl flow fhigh]);
+%     set(gcf,'color','w');box on;grid;
         
     %% ~~~~~~~~~~~~~~~~~ Run GMPHD detection ~~~~~~~~~~~~~~~~~~~
     
@@ -253,5 +254,17 @@ for i = 1:length(idx)
     E_sp = [E_sp DT_sp];
     DT = [];
     DT_sp = [];
+
+    % Representation of the spectrogram
+    figure(5),spectrogram(y_part,2048,[],freqrange(1):100:freqrange(2),fs,'yaxis'); %remember that the units are dB/Hz 
+%     [~,f,t,ps_teorical] = spectrogram(y_part,2048,[],freqrange(1):100:freqrange(2),fs,'yaxis'); %remember that the units are dB/Hz 
+%     figure(6), clf, pcolor(t,f,10*log10(abs(ps_teorical))),shading interp,colorbar
+%     title('Spectrogram (psd) dB/Hz','Interpreter','latex')
+%     xlabel('time (s)','Interpreter','latex')
+%     ylabel('frequency (kHz)','Interpreter','latex')
+%     yt=flow:2000:fhigh;set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     yt = get(gca, 'YTick');set(gca, 'YTick',yt, 'YTickLabel',yt/1000);
+%     axis([min(t) max(t) flow fhigh]);
+%     set(gcf,'color','w');box on;grid;
 end
 
