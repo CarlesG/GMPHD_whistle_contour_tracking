@@ -88,9 +88,7 @@ flow=5000;fhigh=min([50000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
 Tl = 1;
 %flow=2000;fhigh=min([25000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
 
-
-
-for i = 216:length(idx)
+for i = 1:length(idx)
 %                i
 %                 idx(i)
 %                 idx(i) + N_analysis - 1
