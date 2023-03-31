@@ -28,7 +28,7 @@ addpath('pyknogram_functions'); % All pyknogram functions
 
 % ------------ Parameters for obtaining the measurements ------------------
 win_width_s = 0.0053; %window length in seconds (default)
-freqrange = [5000,50000]; % lower and higher frequency range limits in
+freqrange = [5000,25000]; % lower and higher frequency range limits in
 % Hz in which your signals occur 
 peak_thr =8; %threshold in dB for finding spectral peaks 
 %(these become your measurements that will go to the detector)
@@ -69,6 +69,7 @@ tl = t_min / dt;
 %% /////////////// RUN GMPHD DETECTOR ///////////////////
 % ~~~~~~~~~~~~~~~~~~~~~~ Read audio data ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [file, path] = uigetfile('*.wav','Select File to open');
+disp(['Analizando fichero: ' file])
 [x,fs] = audioread(fullfile(path, file));
 x=x(:,1); %select first channel
 %Note: the following only handles one channel data. Adjust as necessary. 
@@ -84,8 +85,8 @@ idx = 1:N_analysis:N_max;
 % Settings for the definition of the filter Bank of piknogram
 BW=1000; % BW in Hz
 BWoverlap=50; % BW in %
-flow=5000;fhigh=min([50000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
-Tl = 1;
+flow=5000;fhigh=min([freqrange(2) fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
+Tl = secs_analisys;
 %flow=2000;fhigh=min([25000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
 
 for i = 1:length(idx)
