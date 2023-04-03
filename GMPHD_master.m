@@ -85,7 +85,7 @@ idx = 1:N_analysis:N_max;
 % Settings for the definition of the filter Bank of piknogram
 BW=1000; % BW in Hz
 BWoverlap=50; % BW in %
-flow=5000;fhigh=min([freqrange(2) fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
+flow=freqrange(1);fhigh=min([freqrange(2) fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
 Tl = secs_analisys;
 %flow=2000;fhigh=min([25000 fs/2-BW/2]); % MINIMUM flow -> flow=round(BW/2)
 
@@ -198,7 +198,7 @@ for i = 1:length(idx)
     
     %% ~~~~~~~~~~~~~~~~ Extract Tracks (whistle contours) ~~~~~~~~~~~~~~~~~~
     [DT_sp,~,~] = tracktarget(XTag_sp,Xk_m_sp,dt,tl);
-    [DT,~,~] = tracktarget(XTag,Xk_m,dt,tl);
+    [DT,~,~] = tracktarget(XTag,Xk_m,dt,round(tl/2));
     %DT is a structure of detected signals with 3 fields for each (freq x time x label)
     
     %save([folder,'GMPHD_',file(1:end-4),'.mat'],'DT')
